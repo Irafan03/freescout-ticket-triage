@@ -1,0 +1,122 @@
+[
+  {
+    "subject": "App crashes on login",
+    "message": "Every time I try to log in, the app crashes immediately. I can't access my account at all. This is blocking my work.",
+    "expected_category": "technical",
+    "expected_priority": "urgent"
+  },
+  {
+    "subject": "Question about pricing plans",
+    "message": "Hi, I was wondering what the difference is between your Pro and Enterprise plans. No rush, just curious.",
+    "expected_category": "billing",
+    "expected_priority": "low"
+  },
+  {
+    "subject": "Cancel my subscription",
+    "message": "I want to cancel my subscription immediately. I no longer need this service.",
+    "expected_category": "cancellation",
+    "expected_priority": "urgent"
+  },
+  {
+    "subject": "Package never arrived",
+    "message": "I ordered 2 weeks ago and my package still hasn't arrived. Tracking shows nothing.",
+    "expected_category": "shipping",
+    "expected_priority": "high"
+  },
+  {
+    "subject": "Thank you",
+    "message": "Just wanted to say your product is great, keep up the good work!",
+    "expected_category": "general",
+    "expected_priority": "low"
+  },
+  {
+    "subject": "Refund not received",
+    "message": "I cancelled 3 weeks ago and was told I'd get a refund within 5 business days. Still nothing.",
+    "expected_category": "billing",
+    "expected_priority": "high"
+  },
+  {
+    "subject": "How do I export my data?",
+    "message": "I'd like to know if there's a way to export all my data as CSV.",
+    "expected_category": "technical",
+    "expected_priority": "low"
+  },
+  {
+    "subject": "URGENT: account hacked",
+    "message": "Someone logged into my account and changed my password. I need this fixed right now.",
+    "expected_category": "account",
+    "expected_priority": "urgent"
+  },
+  {
+    "subject": "Wrong item delivered",
+    "message": "I ordered a blue shirt but received a red one. Not urgent, just want an exchange.",
+    "expected_category": "shipping",
+    "expected_priority": "normal"
+  },
+  {
+    "subject": "Feature suggestion",
+    "message": "It would be great if you added dark mode to the app. Just an idea!",
+    "expected_category": "general",
+    "expected_priority": "low"
+  },
+  {
+    "subject": "Can't reset my password",
+    "message": "The reset link you sent me doesn't work, it just shows an error page.",
+    "expected_category": "account",
+    "expected_priority": "high"
+  },
+  {
+    "subject": "Downgrade my plan",
+    "message": "I'd like to downgrade from Pro to Basic starting next month.",
+    "expected_category": "billing",
+    "expected_priority": "normal"
+  },
+  {
+    "subject": "App is really slow",
+    "message": "Ever since the last update, everything takes forever to load. Quite annoying.",
+    "expected_category": "technical",
+    "expected_priority": "normal"
+  },
+  {
+    "subject": "Where is my invoice?",
+    "message": "I need last month's invoice for my accounting, can you send it?",
+    "expected_category": "billing",
+    "expected_priority": "low"
+  },
+  {
+    "subject": "Delivery to wrong address",
+    "message": "My package was sent to my old address and now it's lost. This is really frustrating, I need it urgently for an event tomorrow.",
+    "expected_category": "shipping",
+    "expected_priority": "urgent"
+  },
+  {
+    "subject": "Great support experience",
+    "message": "Just wanted to thank your support team, they solved my issue super fast!",
+    "expected_category": "general",
+    "expected_priority": "low"
+  },
+  {
+    "subject": "Delete my account",
+    "message": "Please delete my account and all my data permanently.",
+    "expected_category": "cancellation",
+    "expected_priority": "high"
+  },
+  {
+    "subject": "Bug in the mobile app",
+    "message": "The app freezes when I try to upload a photo. Happens every time.",
+    "expected_category": "technical",
+    "expected_priority": "high"
+  },
+  {
+    "subject": "Charged after cancelling",
+    "message": "I cancelled my subscription last month but got charged again this month. Please fix this ASAP.",
+    "expected_category": "billing",
+    "expected_priority": "urgent"
+  },
+  {
+    "subject": "Question about API limits",
+    "message": "What's the rate limit for the API on the free tier?",
+    "expected_category": "technical",
+    "expected_priority": "low"
+  }
+]

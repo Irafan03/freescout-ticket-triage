@@ -1,0 +1,36 @@
+services:
+  db:
+    image: mariadb:10.11
+    container_name: freescout-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: freescout
+      MYSQL_USER: freescout
+      MYSQL_PASSWORD: freescoutpassword
+    volumes:
+      - db_data:/var/lib/mysql
+
+  freescout:
+    image: tiredofit/freescout:latest
+    container_name: freescout
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+      DB_NAME: freescout
+      DB_USER: freescout
+      DB_PASS: freescoutpassword
+      SITE_URL: http://localhost:8080
+      ADMIN_NAME: Admin
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASS: Admin123!
+    volumes:
+      - freescout_data:/www/html/storage
+
+volumes:
+  db_data:
+  freescout_data:
