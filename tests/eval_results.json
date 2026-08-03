@@ -1,0 +1,10 @@
+{
+  "model": "gemma4:31b",
+  "confidence_threshold": 0.75,
+  "total_tickets": 20,
+  "evaluated": 20,
+  "accuracy_category": 90.0,
+  "accuracy_priority": 95.0,
+  "sent_to_review": 0,
+  "errors": []
+}

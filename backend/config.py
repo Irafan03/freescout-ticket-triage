@@ -3,7 +3,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY")
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "https://ollama.com")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma4:31b")
 
 CATEGORIES = [
     "billing",
@@ -23,5 +25,5 @@ PRIORITIES = [
 
 CONFIDENCE_THRESHOLD = 0.75
 
-if not GROQ_API_KEY:
-    raise ValueError("GROQ_API_KEY is missing in the .env file")
+if not OLLAMA_API_KEY:
+    raise ValueError("OLLAMA_API_KEY is missing in the .env file")

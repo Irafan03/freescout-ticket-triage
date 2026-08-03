@@ -1,10 +1,9 @@
 import json
-from fastapi import FastAPI
-from fastapi import HTTPException
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from groq import Groq
+from openai import OpenAI
 
-from config import GROQ_API_KEY, CATEGORIES
+from config import OLLAMA_API_KEY, OLLAMA_BASE_URL, OLLAMA_MODEL, CATEGORIES, CONFIDENCE_THRESHOLD
 
 
 app = FastAPI(
@@ -13,7 +12,11 @@ app = FastAPI(
     version="1.0"
 )
 
-client = Groq(api_key=GROQ_API_KEY)
+# Ollama Cloud uses an OpenAI-compatible API
+client = OpenAI(
+    api_key=OLLAMA_API_KEY,
+    base_url=f"{OLLAMA_BASE_URL}/v1"
+)
 
 SYSTEM_PROMPT = f"""You are a support ticket classifier.
 
@@ -21,9 +24,9 @@ Categories allowed: {", ".join(CATEGORIES)}.
 
 Priority rules (follow strictly):
 - urgent: service is completely broken/inaccessible, security issue, or explicit words like "immediately", "urgent", "ASAP", "right now"
-- high: significant frustration, money at stake (refund, double charge), or time-sensitive request
+- high: significant frustration, money at stake (refund, double charge), time-sensitive request, recurring bug that blocks usage, or account deletion/closure request
 - normal: standard request, no explicit urgency signal, but action is needed
-- low: general question, no action needed urgently, informational
+- low: general question, invoice copy request, no action needed urgently, informational
 
 Sentiment allowed: frustrated, neutral, positive, angry.
 
@@ -49,6 +52,7 @@ class ClassificationResult(BaseModel):
     sentiment: str
     confidence: float
     reason: str
+    needs_review: bool
 
 
 @app.get("/")
@@ -62,7 +66,7 @@ def classify_ticket(ticket: TicketInput):
 
     try:
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model=OLLAMA_MODEL,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_content}
@@ -75,7 +79,19 @@ def classify_ticket(ticket: TicketInput):
 
         data = json.loads(raw_text)
 
-        return ClassificationResult(**data)
+        # Confidence gate : si confidence < seuil, on envoie en révision humaine
+        needs_review = data.get("confidence", 0.0) < CONFIDENCE_THRESHOLD
 
+        return ClassificationResult(
+            category=data["category"],
+            priority=data["priority"],
+            sentiment=data["sentiment"],
+            confidence=data["confidence"],
+            reason=data["reason"],
+            needs_review=needs_review
+        )
+
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=502, detail=f"Model returned invalid JSON: {e}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
