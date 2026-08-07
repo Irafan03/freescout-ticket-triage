@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Support</title>
+  <style>
+    /* ── Reset & base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #f0f2f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: #1a1d23;
+    }
+
+    /* ── Card ─────────────────────────────────────────────────────── */
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.08);
+      padding: 2.5rem 2.25rem;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    /* ── Header ───────────────────────────────────────────────────── */
+    .card-header { text-align: center; margin-bottom: 1.75rem; }
+
+    .icon-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: #eff6ff;
+      color: #2563eb;
+      margin-bottom: 1.125rem;
+    }
+    .icon-wrap svg { width: 28px; height: 28px; }
+
+    h1 { font-size: 1.625rem; font-weight: 700; letter-spacing: -.3px; margin-bottom: .5rem; }
+    .subtitle { font-size: .9375rem; color: #5a6270; line-height: 1.6; }
+
+    /* ── Banners ──────────────────────────────────────────────────── */
+    .banner {
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      font-size: .9rem;
+      font-weight: 500;
+      margin-bottom: 1.25rem;
+      display: none;           /* shown via JS */
+    }
+    .banner.success { background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; }
+    .banner.error   { background: #fff1f2; border: 1px solid #fca5a5; color: #9b1c1c; }
+    .banner.visible { display: block; }
+
+    /* ── Form ─────────────────────────────────────────────────────── */
+    form { display: flex; flex-direction: column; gap: 1.125rem; }
+
+    .group { display: flex; flex-direction: column; gap: .375rem; }
+
+    label { font-size: .875rem; font-weight: 600; }
+
+    input, textarea {
+      width: 100%;
+      padding: .6875rem .875rem;
+      font-size: .9375rem;
+      font-family: inherit;
+      color: #1a1d23;
+      background: #fafafa;
+      border: 1.5px solid #e2e6ea;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color .2s, background .2s, box-shadow .2s;
+      -webkit-appearance: none;
+    }
+    input::placeholder, textarea::placeholder { color: #a0aab4; }
+    input:hover, textarea:hover { border-color: #b0bec5; background: #fff; }
+    input:focus, textarea:focus {
+      border-color: #3b82f6;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+    }
+    textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+
+    /* ── Button ───────────────────────────────────────────────────── */
+    button[type="submit"] {
+      width: 100%;
+      padding: .8125rem 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: inherit;
+      color: #fff;
+      background: #2563eb;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: .5rem;
+      transition: background .2s, transform .2s, box-shadow .2s;
+    }
+    button[type="submit"]:hover:not(:disabled) {
+      background: #1d4ed8;
+      box-shadow: 0 4px 12px rgba(37,99,235,.35);
+      transform: translateY(-1px);
+    }
+    button[type="submit"]:active:not(:disabled) {
+      background: #1e40af;
+      transform: translateY(0);
+      box-shadow: none;
+    }
+    button[type="submit"]:disabled { opacity: .65; cursor: not-allowed; }
+
+    /* ── Responsive ───────────────────────────────────────────────── */
+    @media (max-width: 560px) {
+      .card { padding: 1.75rem 1.25rem; border-radius: 12px; }
+      h1 { font-size: 1.375rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      input, textarea, button[type="submit"] { transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- Header -->
+  <div class="card-header">
+    <div class="icon-wrap" aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+        <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/>
+        <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+      </svg>
+    </div>
+    <h1>Contact Support</h1>
+    <p class="subtitle">
+      Describe your issue and our support team will respond as soon as possible.
+    </p>
+  </div>
+
+  <!-- Feedback banners -->
+  <div id="banner-success" class="banner success" role="alert">
+    ✅ Your message has been sent. We'll be in touch shortly.
+  </div>
+  <div id="banner-error" class="banner error" role="alert">
+    ❌ <span id="error-text">Something went wrong. Please try again.</span>
+  </div>
+
+  <!-- Form -->
+  <form id="support-form" novalidate>
+
+    <div class="group">
+      <label for="full_name">Full Name</label>
+      <input type="text" id="full_name" name="full_name"
+             placeholder="Jane Doe" required autocomplete="name" />
+    </div>
+
+    <div class="group">
+      <label for="email">Email Address</label>
+      <input type="email" id="email" name="email"
+             placeholder="jane.doe@example.com" required autocomplete="email" />
+    </div>
+
+    <div class="group">
+      <label for="subject">Subject</label>
+      <input type="text" id="subject" name="subject"
+             placeholder="Brief description of your issue" required />
+    </div>
+
+    <div class="group">
+      <label for="message">Message</label>
+      <textarea id="message" name="message" rows="6"
+        placeholder="Please include as much detail as possible so we can help you quickly…"
+        required></textarea>
+    </div>
+
+    <button type="submit" id="submit-btn">Send Message</button>
+
+  </form>
+</div>
+
+<script>
+  /**
+   * Support form — sends data to the FastAPI /support endpoint.
+   *
+   * FastAPI endpoint: POST http://127.0.0.1:8000/support
+   * FastAPI inserts the ticket directly into the FreeScout MariaDB database.
+   *
+   * To change the backend URL, update API_URL below.
+   */
+  const API_URL = "http://127.0.0.1:8000/support";
+
+  const form       = document.getElementById("support-form");
+  const submitBtn  = document.getElementById("submit-btn");
+  const bannerOk   = document.getElementById("banner-success");
+  const bannerErr  = document.getElementById("banner-error");
+  const errorText  = document.getElementById("error-text");
+
+  function showBanner(type, message) {
+    bannerOk.classList.remove("visible");
+    bannerErr.classList.remove("visible");
+    if (type === "success") {
+      bannerOk.classList.add("visible");
+    } else {
+      errorText.textContent = message || "Something went wrong. Please try again.";
+      bannerErr.classList.add("visible");
+    }
+    // Scroll banner into view
+    (type === "success" ? bannerOk : bannerErr)
+      .scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    // Basic client-side validation
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Sending…";
+
+    // Collect form values into the shape FastAPI expects
+    const payload = {
+      full_name: document.getElementById("full_name").value.trim(),
+      email:     document.getElementById("email").value.trim(),
+      subject:   document.getElementById("subject").value.trim(),
+      message:   document.getElementById("message").value.trim(),
+    };
+
+    try {
+      const response = await fetch(API_URL, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        showBanner("success");
+        form.reset();
+        console.log("Ticket created:", data);
+      } else {
+        const err = await response.json().catch(() => ({}));
+        showBanner("error", err.detail || `Server error (${response.status})`);
+      }
+    } catch (networkErr) {
+      // FastAPI not reachable (not started, wrong port, CORS, etc.)
+      showBanner("error", `Cannot reach the server. Is FastAPI running on ${API_URL}?`);
+      console.error(networkErr);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Send Message";
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -8,6 +8,8 @@ services:
       MYSQL_DATABASE: freescout
       MYSQL_USER: freescout
       MYSQL_PASSWORD: freescoutpassword
+    ports:
+      - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
 

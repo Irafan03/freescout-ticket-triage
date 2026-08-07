@@ -14,7 +14,7 @@ from openai import OpenAI
 
 # Ajouter le dossier backend au path pour importer config
 sys.path.insert(0, str(Path(__file__).parent / "backend"))
-from config import OLLAMA_API_KEY, OLLAMA_BASE_URL, OLLAMA_MODEL, CATEGORIES, CONFIDENCE_THRESHOLD
+from config import OLLAMA_API_KEY, OLLAMA_BASE_URL, OLLAMA_MODEL, CATEGORIES, PRIORITIES, CONFIDENCE_THRESHOLD
 
 # Chemin vers le fichier de test
 TEST_FILE = Path(__file__).parent / "tests" / "test_tickets.json"
@@ -27,6 +27,7 @@ client = OpenAI(
 SYSTEM_PROMPT = f"""You are a support ticket classifier.
 
 Categories allowed: {", ".join(CATEGORIES)}.
+Priorities allowed: {", ".join(PRIORITIES)}.
 
 Priority rules (follow strictly):
 - urgent: service is completely broken/inaccessible, security issue, or explicit words like "immediately", "urgent", "ASAP", "right now"
