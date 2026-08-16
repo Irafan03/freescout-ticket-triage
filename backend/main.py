@@ -517,7 +517,7 @@ def create_support_ticket(request: SupportRequest):
 
         redirect = ajax_result.get("redirect_url", "")
 
-        # FIX: robust conv_id extraction using both direct field and URL parsing
+        # Extract conv_id from direct field or redirect URL
         conv_id = _extract_conv_id(ajax_result, redirect)
 
         logger.info("Ticket created via /support — conversation_id=%d redirect=%s", conv_id, redirect)

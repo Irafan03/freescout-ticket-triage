@@ -6,7 +6,6 @@ Generate a key at: Manage → API & Webhooks → New Key
 
 Endpoints used:
   GET  /api/v1/conversations          — poll for new tickets
-  GET  /api/v1/conversations/{id}     — fetch a single conversation
   PUT  /api/v1/conversations/{id}     — write back triage meta, mailbox
 """
 
