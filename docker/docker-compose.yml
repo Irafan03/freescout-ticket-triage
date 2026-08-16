@@ -30,9 +30,56 @@ services:
       ADMIN_NAME: Admin
       ADMIN_EMAIL: admin@example.com
       ADMIN_PASS: Admin123!
+      TRIAGE_WEBHOOK_URL: http://host.docker.internal:8000/webhook
+      WEBHOOK_SECRET: ""
     volumes:
       - freescout_data:/www/html/storage
+      # Mount the free API module directly into the FreeScout Modules directory.
+      # The module is cloned once via the init container below and shared via
+      # a named volume so the FreeScout container always has it on startup.
+      - api_module:/www/html/Modules/ApiWebhooks
+
+  # One-shot init container: clones mikeyperes/freescout-api-webhooks from
+  # GitHub into the shared volume, then exits.  Re-running `docker compose up`
+  # is safe — if the folder already exists the clone is skipped.
+  module-init:
+    image: alpine/git:latest
+    container_name: freescout-module-init
+    restart: "no"
+    volumes:
+      - api_module:/module
+    entrypoint: >
+      sh -c "
+        if [ ! -f /module/module.json ]; then
+          echo '[module-init] Cloning freescout-api-webhooks …';
+          git clone --depth 1 https://github.com/mikeyperes/freescout-api-webhooks.git /module &&
+          echo '[module-init] Done.';
+        else
+          echo '[module-init] Module already present, skipping clone.';
+        fi
+      "
+
+  # DB migration for the API module.
+  # Runs after FreeScout is up; waits for the web container to finish its own
+  # first-boot migration before adding the api_keys / api_logs tables.
+  module-migrate:
+    image: tiredofit/freescout:latest
+    container_name: freescout-module-migrate
+    restart: "no"
+    depends_on:
+      - freescout
+      - module-init
+    environment:
+      DB_HOST: db
+      DB_NAME: freescout
+      DB_USER: freescout
+      DB_PASS: freescoutpassword
+    volumes:
+      - freescout_data:/www/html/storage
+      - api_module:/www/html/Modules/ApiWebhooks
+    entrypoint: ["/bin/sh", "-c", "echo '[module-migrate] Waiting 30s…'; sleep 30; cd /www/html && php artisan migrate --force --path=Modules/ApiWebhooks/Database/Migrations && echo '[module-migrate] Migration complete.'"]
 
 volumes:
   db_data:
   freescout_data:
+  api_module:   # shared between module-init, module-migrate, and freescout

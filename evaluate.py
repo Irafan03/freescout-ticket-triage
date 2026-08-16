@@ -109,9 +109,9 @@ def run_evaluation():
         if needs_review:
             sent_to_review += 1
 
-        status_cat = "✅" if cat_ok else "❌"
-        status_prio = "✅" if prio_ok else "❌"
-        review_flag = " ⚠️  needs_review" if needs_review else ""
+        status_cat = "OK" if cat_ok else "XX"
+        status_prio = "OK" if prio_ok else "XX"
+        review_flag = " [needs_review]" if needs_review else ""
 
         print(
             f"[{i:02d}] {subject[:45]:<45} | "
