@@ -1,8 +1,8 @@
 # AI Ticket Triage for FreeScout
 
-Automatic classification of support tickets by **category**, **priority**, and **sentiment** using an LLM. Low-confidence tickets are routed to a dedicated *Needs Review* queue. A suggested reply draft is included in every triage note.
+Automatic classification of support tickets by **category**, **priority**, and **sentiment** using an LLM. Low-confidence tickets are routed to a dedicated *Needs Review* queue. A suggested reply draft is generated for every ticket based on the customer's actual message.
 
-Built on top of [mikeyperes/freescout-api-webhooks](https://github.com/mikeyperes/freescout-api-webhooks) (free, open source).
+Built entirely on open-source tools — no paid modules required.
 
 ---
 
@@ -26,31 +26,47 @@ Full results: [`tests/eval_results.json`](tests/eval_results.json)
 ## How it works
 
 ```
-Customer email
-      │
-      ▼
+Customer submits a ticket
+          │
+          ▼
 FreeScout conversation created
-      │
-      ├─► Webhook POST /webhook  (if configured)
-      │
-      └─► GET /poll every 30 s  (fallback — used by default)
-                │
-                ▼
-        LLM classifies ticket
-        { category, priority, sentiment, confidence, reason }
-                │
-                ├── confidence >= 0.75 → Auto-triaged  ✔
-                │       └── POST note + update priority
-                │
-                └── confidence < 0.75  → Needs Review  ⚠
-                        └── POST note + move to Needs Review mailbox
+          │
+          ├─► PHP module fires webhook → POST /webhook  (instant)
+          │
+          └─► Background auto-poll every 30 s  (fallback, always running)
+                        │
+                        ▼
+               LLM classifies ticket
+               { category, priority, sentiment, confidence, reason }
+                        │
+                        ├── confidence >= 0.75 → ✔ Auto-triaged
+                        │       └── writes tags + priority to FreeScout
+                        │
+                        └── confidence < 0.75  → ⚠ Needs Review
+                                └── moves to Needs Review mailbox
 ```
 
-Every processed ticket gets a styled internal note visible in FreeScout:
+Every processed ticket shows a triage panel in the FreeScout right sidebar:
 
-- Category, priority, sentiment, confidence bar, reason
-- "Auto-triaged" or "Needs Review" badge
-- Suggested reply draft the agent can copy
+- Category, Priority (colour-coded), Sentiment
+- Confidence bar
+- Reason
+- Suggested Reply Draft (based on the customer's actual message, not the category)
+
+No manual command needed — triage runs automatically as soon as a ticket arrives.
+
+---
+
+## Open-source API module
+
+This project uses [mikeyperes/freescout-api-webhooks](https://github.com/mikeyperes/freescout-api-webhooks), a **free open-source** FreeScout module that provides:
+
+- `GET /api/v1/conversations` — list conversations for polling
+- `PUT /api/v1/conversations/{id}` — write back tags, priority, meta fields
+- Outbound webhook on `convo.created` events
+- Right-sidebar triage panel rendered from conversation meta
+
+The module is cloned and mounted automatically by Docker — no manual installation, no purchase required.
 
 ---
 
@@ -58,7 +74,7 @@ Every processed ticket gets a styled internal note visible in FreeScout:
 
 - Docker Desktop
 - Python 3.10+
-- An [Ollama Cloud](https://ollama.com) API key (or any OpenAI-compatible LLM)
+- An [Ollama Cloud](https://ollama.com) API key (or any OpenAI-compatible LLM endpoint)
 
 ---
 
@@ -85,7 +101,7 @@ OLLAMA_API_KEY=your_key_here
 OLLAMA_BASE_URL=https://ollama.com
 OLLAMA_MODEL=gemma4:31b
 
-# FreeScout
+# FreeScout instance
 FREESCOUT_URL=http://localhost:8080
 FREESCOUT_ADMIN_EMAIL=admin@example.com
 FREESCOUT_ADMIN_PASS=Admin123!
@@ -95,7 +111,7 @@ FREESCOUT_MAILBOX_ID=1
 FREESCOUT_API_KEY=
 
 # Needs Review mailbox — set to a different mailbox ID to enable routing
-# Leave equal to FREESCOUT_MAILBOX_ID to use badge-only mode
+# Leave equal to FREESCOUT_MAILBOX_ID for badge-only mode
 FREESCOUT_NEEDS_REVIEW_MAILBOX_ID=1
 
 # Webhook HMAC secret — leave blank for local dev
@@ -111,14 +127,18 @@ POLL_INTERVAL_SECONDS=30
 docker compose -f docker/docker-compose.yml up -d
 ```
 
-Wait ~60 seconds for the first boot. Open http://localhost:8080 and log in with `admin@example.com` / `Admin123!`.
+Wait ~60 seconds for first boot. Open http://localhost:8080 and log in with `admin@example.com` / `Admin123!`.
 
-The `module-init` container clones `mikeyperes/freescout-api-webhooks` automatically. The `module-migrate` container runs the DB migrations. No manual module installation needed.
+Docker automatically:
+- Clones `mikeyperes/freescout-api-webhooks` into the FreeScout container (`module-init`)
+- Runs the DB migrations (`module-migrate`)
+
+No manual module installation needed.
 
 ### 4. Generate a FreeScout API key
 
 1. In FreeScout: **Manage → API & Webhooks → New Key**
-2. Copy the key and paste it into `.env` as `FREESCOUT_API_KEY`
+2. Copy the key into `.env` as `FREESCOUT_API_KEY`
 
 ### 5. (Optional) Create a Needs Review mailbox
 
@@ -130,6 +150,7 @@ The `module-init` container clones `mikeyperes/freescout-api-webhooks` automatic
 
 ```bash
 python -m venv venv
+
 # Windows:
 venv\Scripts\activate
 # macOS/Linux:
@@ -139,41 +160,15 @@ pip install -r requirements.txt
 uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The API is now available at http://localhost:8000.
+The service starts at http://localhost:8000 and immediately begins polling FreeScout every 30 seconds in the background. No manual trigger needed.
 
 ---
 
 ## Demo — send a test ticket
 
-Open `support.html` in your browser (double-click the file). Fill in:
+Open `support.html` in your browser. Fill in any subject and message, then click **Send**.
 
-- **Name:** imane
-- **Email:** imane@test.com
-- **Subject:** Charged twice for my subscription
-- **Message:** Hello, I renewed my subscription yesterday, but my credit card was charged twice. Please refund the duplicate payment as soon as possible.
-
-Click **Send**. The ticket appears in FreeScout.
-
-Then trigger the poll (or wait 30 s for the auto-poll):
-
-```bash
-curl -X POST http://localhost:8000/poll
-```
-
-Reload the conversation in FreeScout — you will see the triage note:
-
-```
-🤖 AI Ticket Triage  ✔ Auto-triaged
-Category   billing
-Priority   HIGH
-Sentiment  frustrated
-Confidence ████████████ 100%
-Reason     User reports a double charge and requests a refund.
-
-✏ SUGGESTED REPLY DRAFT
-Thank you for reaching out about a billing issue. We have received your
-request and our billing team will review it within 1 business day...
-```
+The ticket appears in FreeScout and is classified automatically within seconds. Reload the conversation — the triage panel appears in the right sidebar with category, priority, confidence, and a suggested reply draft.
 
 ---
 
@@ -182,11 +177,11 @@ request and our billing team will review it within 1 business day...
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/` | Health check |
-| POST | `/classify` | Classify a ticket (no write-back) |
+| POST | `/classify` | Classify a ticket (no write-back to FreeScout) |
 | POST | `/support` | Create a ticket via `support.html` |
 | POST | `/webhook` | Receive FreeScout webhook (HMAC-verified) |
-| POST | `/poll` | Manually trigger a poll cycle |
-| GET | `/poll/status` | Number of processed conversations |
+| POST | `/poll` | Manually trigger one poll cycle |
+| GET | `/poll/status` | Total number of processed conversations |
 
 Interactive docs: http://localhost:8000/docs
 
@@ -206,28 +201,9 @@ curl -X POST http://localhost:8000/classify \
   "confidence": 0.98,
   "reason": "Service completely inaccessible — matches urgent criteria.",
   "needs_review": false,
-  "draft_reply": "Thank you for reporting this technical issue..."
+  "draft_reply": "Thank you for reporting this. I can see the app is crashing on login..."
 }
 ```
-
----
-
-## Configuring webhooks (optional)
-
-Webhooks let FreeScout push new tickets to the service instantly instead of waiting for the poll.
-
-1. You need a public URL for the service (use [ngrok](https://ngrok.com) for local dev):
-   ```bash
-   ngrok http 8000
-   # Copy the https://xxxx.ngrok.io URL
-   ```
-2. In FreeScout: **Manage → API & Webhooks → Webhooks → Add**
-   - URL: `https://xxxx.ngrok.io/webhook`
-   - Events: `convo.created`
-   - Secret: any string — copy it to `WEBHOOK_SECRET` in `.env`
-3. Restart the service.
-
-The service verifies the `X-FreeScout-Signature` header (HMAC-SHA1, base64-encoded) on every incoming webhook.
 
 ---
 
@@ -260,10 +236,10 @@ Valid priorities: `low`, `normal`, `high`, `urgent`
 ```
 freescout-ticket-triage/
 ├── backend/
-│   ├── main.py           # FastAPI app — all endpoints
-│   ├── freescout_api.py  # REST client — polling, note post, needs-review routing
+│   ├── main.py           # FastAPI app — all endpoints + auto-poll background task
+│   ├── freescout_api.py  # REST client — polling, write-back, needs-review routing
 │   ├── config.py         # All settings loaded from .env
-│   └── db.py             # MySQL idempotency store
+│   └── db.py             # MySQL idempotency store (INSERT IGNORE)
 ├── tests/
 │   ├── test_tickets.json # 20 hand-labeled tickets
 │   └── eval_results.json # Latest accuracy results
@@ -271,7 +247,7 @@ freescout-ticket-triage/
 │   └── tickets.csv       # Full labeled dataset
 ├── docker/
 │   └── docker-compose.yml
-├── evaluate.py           # Run accuracy evaluation
+├── evaluate.py           # Accuracy evaluation script
 ├── support.html          # Web form to create test tickets
 ├── .env.example
 └── requirements.txt
@@ -281,28 +257,34 @@ freescout-ticket-triage/
 
 ## Needs Review routing
 
-When the LLM confidence is below `CONFIDENCE_THRESHOLD` (default 0.75):
+When the LLM confidence is below `CONFIDENCE_THRESHOLD` (default `0.75`):
 
-1. The triage note displays a **⚠ Needs Review** badge instead of **✔ Auto-triaged**.
+1. The sidebar shows a **⚠ Needs Review** badge instead of **✔ AI Classified**.
 2. The conversation is moved to the mailbox set in `FREESCOUT_NEEDS_REVIEW_MAILBOX_ID`.
 
-If `FREESCOUT_NEEDS_REVIEW_MAILBOX_ID` equals `FREESCOUT_MAILBOX_ID` (the default), the ticket stays in the same mailbox — only the badge changes. Set a different mailbox ID to activate actual queue routing.
+If both mailbox IDs are equal (the default), the ticket stays in place — only the badge changes. Set a different mailbox ID to activate actual queue routing.
 
 ---
 
-## Stretch goals implemented
+## Suggested Reply
 
-- **Suggested reply drafts** — every triage note includes a category-specific draft reply the agent can copy directly into the reply box.
+Every triage result includes a suggested reply draft generated by the LLM. The reply is based on the **customer's actual message and subject** — not on the category label. The LLM is explicitly instructed to:
+
+- Answer what the customer actually asked or reported
+- Never invent facts not present in the message
+- Never make unsupported promises (refunds, deadlines, team assignments)
+- Match the language of the customer's message
+
+---
+
+## Idempotency
+
+Every processed conversation ID is stored in a MySQL `triage_processed` table using `INSERT IGNORE`. If FreeScout retries a webhook or the poller runs again, the ticket is silently skipped — it is never classified twice.
 
 ---
 
 ## Architecture notes
 
-The service uses the open source `mikeyperes/freescout-api-webhooks` module instead of the paid official module. All required REST endpoints are available:
+The triage panel visible in the FreeScout sidebar is rendered entirely by the open-source `mikeyperes/freescout-api-webhooks` PHP module. The Python service writes classification results to `conversation.meta` via a single `PUT /api/v1/conversations/{id}` call. The PHP module reads those fields and renders the sidebar panel — no separate note or thread is posted.
 
-- `GET /api/v1/conversations` — polling
-- `GET /api/v1/conversations/{id}` — fetch conversation + threads
-- `PUT /api/v1/conversations/{id}` — update priority, mailbox
-- `POST /api/v1/conversations/{id}/threads` — post internal note
-
-The module is mounted automatically into the FreeScout Docker container via the `module-init` container in `docker-compose.yml`. No manual installation is needed.
+The automatic poll runs as an `asyncio` background task inside the FastAPI process. It starts 10 seconds after service startup and repeats every `POLL_INTERVAL_SECONDS` (default 30). This means tickets are classified within 30 seconds of arriving in FreeScout, with no manual intervention.

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Ticket Triage — Project Reference</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #f8fafc;
+      color: #1e293b;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 3rem 1rem;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 3rem; }
+    h1 { font-size: 2.25rem; color: #0f172a; margin-bottom: 0.75rem; }
+    .subtitle { font-size: 1.125rem; color: #64748b; }
+
+    section {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.1);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border: 1px solid #e2e8f0;
+    }
+    h2 {
+      font-size: 1.5rem;
+      color: #2563eb;
+      margin-bottom: 1.25rem;
+      border-bottom: 2px solid #eff6ff;
+      padding-bottom: 0.5rem;
+    }
+    h3 { font-size: 1.05rem; margin: 1.5rem 0 0.75rem; color: #334155; }
+    p, li { margin-bottom: 0.75rem; color: #475569; }
+    ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      background: #e0e7ff;
+      color: #4338ca;
+      border-radius: 4px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: monospace;
+    }
+    .badge-green {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .badge-orange {
+      background: #fff7ed;
+      color: #9a3412;
+    }
+
+    /* Architecture flow */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      margin: 1.5rem 0;
+      font-family: monospace;
+      font-size: 0.95rem;
+    }
+    .flow-box {
+      background: #eff6ff;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 0.5rem 2rem;
+      color: #1d4ed8;
+      font-weight: 600;
+      min-width: 240px;
+      text-align: center;
+    }
+    .flow-box.branch {
+      background: #f0fdf4;
+      border-color: #86efac;
+      color: #166534;
+    }
+    .flow-arrow {
+      color: #94a3b8;
+      font-size: 1.25rem;
+      line-height: 1.4;
+    }
+
+    /* Feature list */
+    .feature-list { list-style: none; margin: 0; padding: 0; }
+    .feature-list li {
+      padding: 0.4rem 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.95rem;
+      color: #334155;
+      margin: 0;
+    }
+    .feature-list li:last-child { border-bottom: none; }
+    .done { color: #16a34a; font-weight: 700; margin-right: 0.5rem; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.25rem 0;
+    }
+    th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid #e2e8f0; }
+    th { background: #f1f5f9; font-weight: 600; color: #475569; }
+
+    .note {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 1rem;
+      color: #1e40af;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      font-size: 0.92rem;
+    }
+    .success {
+      background: #f0fdf4;
+      border-left: 4px solid #22c55e;
+      padding: 1rem;
+      color: #166534;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      font-size: 0.92rem;
+    }
+
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 1.25rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      margin: 1rem 0;
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>🤖 AI Ticket Triage Service</h1>
+    <p class="subtitle">Project reference — architecture, features delivered, and technical decisions</p>
+  </header>
+
+  <!-- ── Overview ─────────────────────────────────────────────────────── -->
+  <section>
+    <h2>📋 Overview</h2>
+    <p>
+      A Python service that sits alongside FreeScout and automatically classifies every
+      incoming support ticket by <strong>category</strong>, <strong>priority</strong>,
+      and <strong>sentiment</strong> using an LLM. Low-confidence tickets are routed to
+      a dedicated <em>Needs Review</em> queue. A suggested reply draft is generated for
+      every ticket based on the customer's actual message.
+    </p>
+
+    <div class="success">
+      <strong>Built entirely on open-source tools.</strong>
+      Uses <a href="https://github.com/mikeyperes/freescout-api-webhooks" style="color:#166534;">mikeyperes/freescout-api-webhooks</a>
+      — a free, open-source FreeScout module. No paid modules required.
+    </div>
+
+    <h3>Accuracy (20 hand-labeled tickets)</h3>
+    <table>
+      <thead><tr><th>Field</th><th>Correct</th><th>Total</th><th>Accuracy</th></tr></thead>
+      <tbody>
+        <tr><td>Category</td><td>19</td><td>20</td><td><strong>95%</strong></td></tr>
+        <tr><td>Priority</td><td>20</td><td>20</td><td><strong>100%</strong></td></tr>
+      </tbody>
+    </table>
+    <p>Model: <span class="badge">gemma4:31b</span> · Confidence threshold: <span class="badge">0.75</span> · Target: category ≥ 85% ✔</p>
+  </section>
+
+  <!-- ── Architecture ──────────────────────────────────────────────────── -->
+  <section>
+    <h2>🏗️ Architecture</h2>
+
+    <div class="flow">
+      <div class="flow-box">Customer submits a ticket</div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-box">FreeScout conversation created</div>
+      <div class="flow-arrow">↓  ↓</div>
+      <div style="display:flex;gap:2rem;justify-content:center;width:100%;margin:0.25rem 0;">
+        <div class="flow-box" style="min-width:160px;font-size:0.85rem;">PHP module fires<br>webhook → POST /webhook<br><em>(instant)</em></div>
+        <div class="flow-box" style="min-width:160px;font-size:0.85rem;">Auto-poll every 30s<br>(always running)<br><em>(fallback)</em></div>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-box">LLM classifies ticket</div>
+      <div class="flow-arrow">↓  ↓</div>
+      <div style="display:flex;gap:2rem;justify-content:center;width:100%;margin:0.25rem 0;">
+        <div class="flow-box branch" style="min-width:160px;font-size:0.85rem;">confidence ≥ 0.75<br>✔ Auto-triaged<br>tags + priority written</div>
+        <div class="flow-box" style="min-width:160px;font-size:0.85rem;background:#fff7ed;border-color:#fed7aa;color:#9a3412;">confidence &lt; 0.75<br>⚠ Needs Review<br>moved to review mailbox</div>
+      </div>
+    </div>
+
+    <h3>Tech Stack</h3>
+    <ul>
+      <li><strong>Backend:</strong> FastAPI (Python 3.10+)</li>
+      <li><strong>AI Model:</strong> <span class="badge">gemma4:31b</span> via Ollama Cloud (OpenAI-compatible API)</li>
+      <li><strong>FreeScout module:</strong> <a href="https://github.com/mikeyperes/freescout-api-webhooks">mikeyperes/freescout-api-webhooks</a> — free, open-source</li>
+      <li><strong>FreeScout integration:</strong> REST API (<span class="badge">PUT /api/v1/conversations/{id}</span>) + outbound webhook</li>
+      <li><strong>Idempotency:</strong> MySQL <span class="badge">triage_processed</span> table with <span class="badge">INSERT IGNORE</span></li>
+      <li><strong>Infrastructure:</strong> FreeScout + MariaDB in Docker</li>
+    </ul>
+  </section>
+
+  <!-- ── Features ──────────────────────────────────────────────────────── -->
+  <section>
+    <h2>✅ Implemented Features</h2>
+    <ul class="feature-list">
+      <li><span class="done">✓</span> Ticket classification — category, priority, sentiment, confidence, reason</li>
+      <li><span class="done">✓</span> Confidence gate — low-confidence tickets routed to Needs Review</li>
+      <li><span class="done">✓</span> Needs Review mailbox routing — moves conversation to dedicated mailbox</li>
+      <li><span class="done">✓</span> FreeScout sidebar panel — category, priority, confidence bar, reason, suggested reply</li>
+      <li><span class="done">✓</span> Suggested reply draft — generated from the customer's actual message, never from category alone</li>
+      <li><span class="done">✓</span> Webhook receiver — HMAC-SHA1 signature verified (<span class="badge">X-FreeScout-Signature</span>)</li>
+      <li><span class="done">✓</span> Auto-poll background task — polls FreeScout every 30s automatically on startup</li>
+      <li><span class="done">✓</span> REST API write-back — tags, priority, meta via <span class="badge">PUT /api/v1/conversations/{id}</span></li>
+      <li><span class="done">✓</span> Idempotency — MySQL INSERT IGNORE, no double-processing</li>
+      <li><span class="done">✓</span> Contact form — <span class="badge">support.html</span> creates tickets with instant triage</li>
+      <li><span class="done">✓</span> Accuracy evaluation script — <span class="badge">evaluate.py</span> with per-field metrics</li>
+      <li><span class="done">✓</span> 20 hand-labeled test tickets — category 95%, priority 100%</li>
+    </ul>
+  </section>
+
+  <!-- ── Open-source module ─────────────────────────────────────────────── -->
+  <section>
+    <h2>🔌 Open-Source FreeScout Module</h2>
+
+    <div class="note">
+      This project uses <strong>mikeyperes/freescout-api-webhooks</strong>, a free open-source
+      module — not the paid official FreeScout module. It provides identical functionality
+      at zero cost.
+    </div>
+
+    <p>The module is cloned automatically by the <span class="badge">module-init</span> Docker container on first startup. No manual installation needed.</p>
+
+    <h3>API endpoints provided by the module</h3>
+    <table>
+      <thead><tr><th>Method</th><th>Endpoint</th><th>Used for</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge">GET</span></td><td><span class="badge">/api/v1/conversations</span></td><td>Polling for new tickets</td></tr>
+        <tr><td><span class="badge">PUT</span></td><td><span class="badge">/api/v1/conversations/{id}</span></td><td>Write back tags, priority, meta fields</td></tr>
+        <tr><td>Webhook</td><td><span class="badge">POST → /webhook</span></td><td>Outbound push on <span class="badge">convo.created</span></td></tr>
+        <tr><td>Sidebar</td><td>PHP ServiceProvider</td><td>Renders triage panel from conversation.meta</td></tr>
+      </tbody>
+    </table>
+
+    <h3>How the sidebar works</h3>
+    <p>
+      The Python service writes classification results to <span class="badge">conversation.meta</span>
+      via a single <span class="badge">PUT</span> call. The PHP ServiceProvider in the module
+      reads those meta fields and renders the sidebar panel directly inside FreeScout.
+      No separate note or thread is posted into the conversation.
+    </p>
+  </section>
+
+  <!-- ── API Reference ─────────────────────────────────────────────────── -->
+  <section>
+    <h2>📡 API Reference</h2>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-green">GET</span></td><td><span class="badge">/</span></td><td>Health check</td></tr>
+        <tr><td><span class="badge badge-orange">POST</span></td><td><span class="badge">/classify</span></td><td>Classify a ticket — no write-back to FreeScout</td></tr>
+        <tr><td><span class="badge badge-orange">POST</span></td><td><span class="badge">/support</span></td><td>Create a ticket via support.html — classifies immediately</td></tr>
+        <tr><td><span class="badge badge-orange">POST</span></td><td><span class="badge">/webhook</span></td><td>Receive FreeScout webhook (HMAC-verified)</td></tr>
+        <tr><td><span class="badge badge-orange">POST</span></td><td><span class="badge">/poll</span></td><td>Manually trigger one poll cycle</td></tr>
+        <tr><td><span class="badge badge-green">GET</span></td><td><span class="badge">/poll/status</span></td><td>Total number of processed conversations</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Example — classify only</h3>
+    <pre>curl -X POST http://localhost:8000/classify \
+  -H "Content-Type: application/json" \
+  -d '{"subject": "App crashes on login",
+       "message": "Every time I log in the app crashes."}'</pre>
+
+    <pre>{
+  "category":   "technical",
+  "priority":   "urgent",
+  "sentiment":  "frustrated",
+  "confidence": 0.98,
+  "reason":     "Service completely inaccessible — matches urgent criteria.",
+  "needs_review": false,
+  "draft_reply": "Thank you for reporting this. I can see the app is crashing on login..."
+}</pre>
+
+    <p>Interactive docs: <a href="http://localhost:8000/docs">http://localhost:8000/docs</a></p>
+  </section>
+
+  <!-- ── Code Reference ────────────────────────────────────────────────── -->
+  <section>
+    <h2>📂 Code Reference</h2>
+    <table>
+      <thead><tr><th>File</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="badge">backend/main.py</span></td>
+          <td>FastAPI app — all endpoints + auto-poll asyncio background task</td>
+        </tr>
+        <tr>
+          <td><span class="badge">backend/freescout_api.py</span></td>
+          <td>REST client — polling, write-back tags/priority/meta, Needs Review routing</td>
+        </tr>
+        <tr>
+          <td><span class="badge">backend/config.py</span></td>
+          <td>All settings loaded from .env — categories, priorities, thresholds</td>
+        </tr>
+        <tr>
+          <td><span class="badge">backend/db.py</span></td>
+          <td>MySQL idempotency store — INSERT IGNORE on triage_processed</td>
+        </tr>
+        <tr>
+          <td><span class="badge">evaluate.py</span></td>
+          <td>Accuracy evaluation against hand-labeled test set</td>
+        </tr>
+        <tr>
+          <td><span class="badge">tests/test_tickets.json</span></td>
+          <td>20 hand-labeled tickets for evaluation</td>
+        </tr>
+        <tr>
+          <td><span class="badge">support.html</span></td>
+          <td>Standalone contact form — posts to POST /support</td>
+        </tr>
+        <tr>
+          <td><span class="badge">docker/docker-compose.yml</span></td>
+          <td>FreeScout + MariaDB + module-init + module-migrate containers</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── Idempotency & auto-poll ────────────────────────────────────────── -->
+  <section>
+    <h2>🔁 Idempotency &amp; Auto-Poll</h2>
+
+    <h3>Idempotency</h3>
+    <p>
+      Every processed conversation ID is stored in a MySQL <span class="badge">triage_processed</span>
+      table using <span class="badge">INSERT IGNORE</span>. If FreeScout retries a webhook or the
+      poller runs again, the ticket is silently skipped — never classified twice.
+    </p>
+
+    <h3>Auto-poll</h3>
+    <p>
+      The service starts an <span class="badge">asyncio</span> background task on startup that
+      polls FreeScout every <span class="badge">POLL_INTERVAL_SECONDS</span> (default 30s).
+      No manual command needed. Tickets are classified within 30 seconds of arriving in FreeScout.
+    </p>
+
+    <h3>Webhook (instant)</h3>
+    <p>
+      When <span class="badge">TRIAGE_WEBHOOK_URL</span> is set in the Docker environment,
+      the PHP module fires a <span class="badge">POST /webhook</span> immediately when a conversation
+      is created — no waiting for the poll cycle.
+    </p>
+  </section>
+
+  <!-- ── Suggested Reply ───────────────────────────────────────────────── -->
+  <section>
+    <h2>✏️ Suggested Reply</h2>
+    <p>
+      Every triage result includes a reply draft generated by the LLM.
+      The reply is based on the <strong>customer's actual message and subject</strong> —
+      not on the category label.
+    </p>
+    <ul>
+      <li>Answers what the customer actually asked or reported</li>
+      <li>Never invents facts not present in the message</li>
+      <li>Never assumes a problem from the category alone (billing ≠ billing problem)</li>
+      <li>Never makes unsupported promises (refunds, deadlines, team assignments)</li>
+      <li>Matches the language of the customer's message</li>
+    </ul>
+    <p>The draft appears in the FreeScout sidebar under <strong>Suggested Reply</strong> — the agent can copy it directly into the reply box.</p>
+  </section>
+
+  <!-- ── Configuration ─────────────────────────────────────────────────── -->
+  <section>
+    <h2>⚙️ Configuration (.env)</h2>
+    <table>
+      <thead><tr><th>Variable</th><th>Description</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge">OLLAMA_API_KEY</span></td><td>LLM API key (required)</td><td>—</td></tr>
+        <tr><td><span class="badge">OLLAMA_BASE_URL</span></td><td>LLM base URL</td><td>https://ollama.com</td></tr>
+        <tr><td><span class="badge">OLLAMA_MODEL</span></td><td>Model name</td><td>gemma4:31b</td></tr>
+        <tr><td><span class="badge">FREESCOUT_URL</span></td><td>FreeScout instance URL</td><td>http://localhost:8080</td></tr>
+        <tr><td><span class="badge">FREESCOUT_API_KEY</span></td><td>API key from the module</td><td>—</td></tr>
+        <tr><td><span class="badge">FREESCOUT_MAILBOX_ID</span></td><td>Default mailbox ID</td><td>1</td></tr>
+        <tr><td><span class="badge">FREESCOUT_NEEDS_REVIEW_MAILBOX_ID</span></td><td>Needs Review mailbox ID</td><td>1</td></tr>
+        <tr><td><span class="badge">CONFIDENCE_THRESHOLD</span></td><td>Below this → Needs Review</td><td>0.75</td></tr>
+        <tr><td><span class="badge">POLL_INTERVAL_SECONDS</span></td><td>Auto-poll interval</td><td>30</td></tr>
+        <tr><td><span class="badge">WEBHOOK_SECRET</span></td><td>HMAC secret for webhook verification</td><td>(blank)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+</body>
+</html>
